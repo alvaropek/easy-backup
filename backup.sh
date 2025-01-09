@@ -25,21 +25,12 @@ backup_path="/home/alvaropek/backups"
 
 current_date_time=$(date +"%Y-%m-%d_%H:%M:%S")
 
-echo $current_date_time\n
-
-#file_to_save=$1
 
 # Initialize variables for options and the main argument
 
-flag_a=false
-
-flag_f=false
-
-flag_B=false
-
 backup_mode=0
 
-all_compatible=false
+needs_all=false
 
 # Functions
 
@@ -61,7 +52,6 @@ function check_extra_for_all(){
 
 function interpret_option(){
 
-        echo -e "$backup_mode is backup_mode"
         if [ $chosen_option == "l" ] || [ $chosen_option == "L" ]; then
                 list_backup
         elif [ $chosen_option == "t" ]; then
@@ -78,8 +68,14 @@ function interpret_option(){
                 copy_backup
         elif [ $chosen_option == "p" ]; then
                 purge_backup
+        elif [ $chosen_option == "P" ]; then
+                purge_all_backup
         elif [ $chosen_option == "d" ]; then
                 delete_backup
+        elif [ $chosen_option == "D" ]; then
+                delete_all_backup
+        elif [ $chosen_option == "h" ]; then
+                help_panel
         fi
 
 }
@@ -149,23 +145,93 @@ function purge_backup(){
 
         if [ -d "$backup_path/$target/" ]; then
                 last_file="$(ls -1 "$backup_path/$target" | tail -n 1)"
-                echo "$last_file"
+                echo -e "\nKeeping last file: ${greencol}$last_file${endcol}"
                 find "$backup_path/$target/" -type f ! -name "$last_file" -exec rm -f {} +
         else
                 echo -e "\n${redcol}No such folder mate!${endcol}"
         fi
 }
 
+
+function purge_all_backup(){
+
+        if [ ! $extra_for_all ]; then
+                echo -e "\n${redcol}This option requires confirmation from the -a (all) option.${endcol}"
+                echo -e "\n${redcol}This option will purge all backup folders, leaving only the last backup for each file.${endcol}"
+                echo -e "\n${redcol}If this is your intention, please add -a and try again.${endcol}"
+                exit 0
+        else
+                all_folders="$(ls -1 "$backup_path")"
+                echo -e "$all_folders" | while read line; do
+
+                        if [ -d "$backup_path/$line/" ]; then
+                                last_file="$(ls -1 "$backup_path/$line" | tail -n 1)"
+                                echo -e "\nKeeping last file: ${greencol}$last_file${endcol}"
+                                find "$backup_path/$line/" -type f ! -name "$last_file" -exec rm -f {} +
+
+                        else
+                                echo -e "\n${redcol}No such folder mate!${endcol}"
+                        fi
+                done
+        fi
+}
+
+function delete_all_backup(){
+
+        if [ ! $extra_for_all ]; then
+                echo -e "\n${redcol}This option requires confirmation from the -a (all) option.${endcol}"
+                echo -e "\n${redcol}This option will delete all backup folders, leaving nothing behind.${endcol}"
+                echo -e "\n${redcol}If this is your intention, please add -a and try again.${endcol}"
+                exit 0
+        else
+                echo -e "${yellowcol}You will delete all your backups! You have 8 seconds to stop the script...${endcol}\n"
+                sleep 8
+                rm -rf "$backup_path"/* && echo "All backups removed successfully"
+
+        fi
+}
+
 function delete_backup(){
 
         if [ -d "$backup_path/$target/" ]; then
-                echo "You will delete $target! You have 6 seconds to stop the script...\n"
+                echo "You will delete all of $target! You have 6 seconds to stop the script...\n"
                 sleep 6
                 rm -rf "$backup_path/$target" && echo "All backups for $target removed successfully"
-
         fi
 
 }
+
+function help_panel(){
+
+echo -e "
+Backup your files into a special backup folder. 
+
+Your current backup folder path is: ${greencol}$backup_path${endcol}
+
+[+] Standard Usage:
+        If you want to make backup simply run $0 followed by the name of a file.
+        This tool currently does not support multiple file handling.
+
+[+] Advanced usage:
+        If you want to interact with your backup folders in a more advanced way, the following options are available:
+
+        -l) List number of backups and last date of backup per folder as a list.
+        -L) List all backups from a specific file (Requires a file name as a parameter).
+        -t) List all backups as a tree.
+        -b) Copy last backup without the date and time extension (Requires file name as a parameter (without date time extension)).
+        -B) Copy a specific backup without the date and time extension (Requires file name as a parameter (with date time extension)).
+        -c) Copy last backup to current folder with the date and time extension (Requires file name as a parameter (without date time extension)).
+        -C) Copy a specific backup with the date and time extension (Requires file name as a parameter (with date time extension)).
+        -p) Purge all backup files of a certain folder except last file (Requires file name as a well as parameter -a (all)).
+        -P) Purge all backup files of all folders except last backup file of each folder (Requires parameter -a (all)).
+        -d) Delete all backup files of a certain folder (Requires file name).
+        -D) Delete all backup files of all folders (Requires parameter -a (all)).
+        -a) Perform action on all backup folders (required for Purge All (-P) and Delete All (-D). Otherwise ignored).
+        -h) Display this help panel.
+"
+
+}
+
 
 
 function make_backup(){
@@ -179,7 +245,7 @@ function make_backup(){
                 fi
 
                 # Copy the file with the current date and time appended to its name.
-                cp $file_to_save $backup_path/$file_to_save/$file_to_save\_$current_date_time && echo -e "Created backup for $file_to_save as $backup_path/$file_to_save/$file_to_save\_$current_date_time"}
+                cp $file_to_save $backup_path/$file_to_save/$file_to_save\_$current_date_time && echo -e "Created backup for $file_to_save as ${turquoisecol}$backup_path/$file_to_save/"$file_to_save"_"$current_date_time"${endcol}"
 
         else 
                 # Report file not found.
@@ -193,45 +259,42 @@ function make_backup(){
 
 # Parse options using getopts
 
-while getopts "lL:tfb:B:c:C:p:d:ah" arg; do
+while getopts "lL:tfb:B:c:C:p:Pd:Dah" arg; do
         case "$arg" in
-                l) echo 'List number of backups and last date of backup per folder as a list'; ((backup_mode++)); chosen_option="l";;
-                L) target=$OPTARG; echo 'List all backups from a certain folder'; ((backup_mode++)); chosen_option="L";;
-                t) echo 'List all backups as a tree'; ((backup_mode++)); chosen_option="t";;
-                f) echo 'List path'; ((backup_mode++)); chosen_option="f";;
-                b) target=$OPTARG; echo '(from "bring") Bring last backup without date and time.'; ((backup_mode++)); chosen_option="b"; last_only=true;;
-                B) target=$OPTARG; echo '(from "Bring") Bring a specific backup (must provide full name of backup) without date and time.'; ((backup_mode++)); chosen_option="B";;
-                c) target=$OPTARG; echo '(from "copy") Bring last backup as is, with date and time.'; ((backup_mode++)); chosen_option="c"; last_only=true;;
-                C) target=$OPTARG; echo '(from "copy") Bring a specififc  backup (must provide full name of backup) as is, with date and time.'; ((backup_mode++)); chosen_option="C";;
-                p) target=$OPTARG; echo 'Purge all backups of a certain folder except last one. Interacts with param -a (all)'; ((backup_mode++)); all_compatible=true; chosen_option="p";;
-                d) target=$OPTARG; echo 'Delete all backups of a certain folder. Interacts with param -a (all)'; ((backup_mode++)); all_compatible=true; chosen_option="d";;
-                a) echo 'Perform action on all folders and files of backup.'; extra_for_all="a";;
-                h) echo 'Show help menu'; ((backup_mode++)); chosen_option="h";;
+                l) ((backup_mode++)); chosen_option="l";;
+                L) target=$OPTARG; ((backup_mode++)); chosen_option="L";;
+                t) ((backup_mode++)); chosen_option="t";;
+                f) ((backup_mode++)); chosen_option="f";;
+                b) target=$OPTARG; ((backup_mode++)); chosen_option="b"; last_only=true;;
+                B) target=$OPTARG; ((backup_mode++)); chosen_option="B";;
+                c) target=$OPTARG; ((backup_mode++)); chosen_option="c"; last_only=true;;
+                C) target=$OPTARG; ((backup_mode++)); chosen_option="C";;
+                p) target=$OPTARG; ((backup_mode++)); all_compatible=true; chosen_option="p";;
+                P) target=$OPTARG; ((backup_mode++)); needs_all=true; chosen_option="P";;
+                d) target=$OPTARG; ((backup_mode++)); needs_all=true; chosen_option="d";;
+                D) target=$OPTARG; ((backup_mode++)); needs_all=true; chosen_option="D";;
+                a) extra_for_all="true";;
+                h) ((backup_mode++)); chosen_option="h";;
         esac
 done
 
-
-check_too_many_options
-
-if [ $backup_mode -eq 1 ]; then
-
-        interpret_option
-
-fi
 
 # Shift to remove parsed options before evaluating whether to make a backup
 
 shift $((OPTIND - 1))
 
-# Checks to carry out before doing anything
+# Checks if there even is a file to backup before doing anything
 
-if [ "$#" -eq 1 ]; then
+if [ "$#" -eq 1 ] && [ $backup_mode -eq 0 ]; then
+
         file_to_save="$1"
         echo "file $file_to_save registered"
-else
-    echo #"Error: Missing or too many arguments." >&2
-fi
 
+elif [ "$#" -gt 1 ] && [ $backup_mode -eq 0 ]; then
+
+    echo -e "\n${redcol}Error: Too many arguments.${endcol}"
+
+fi
 
 
 # Check that a valid backup path has been stablished
@@ -257,9 +320,21 @@ if [ $file_to_save ] && [ $backup_mode -eq 0 ]; then
 elif [ $file_to_save ] && [ $backup_mode -eq 1 ]; then
         echo -e "\n${redcol}Using other option, do not add a file outside parameter.${endocol}"
         echo -e "\nIf you want to make a backup simply run: ./backup.sh [FILE] "
+        exit 0
 
 elif [ $backup_mode -eq 0 ]; then
         echo -e "\n${redcol}No file provided. Please provide a file to make a backup of.${endcol}"
-
+        exit 0
 fi
 
+
+
+# Carry out options interpretation
+
+check_too_many_options
+
+if [ $backup_mode -eq 1 ]; then
+
+        interpret_option
+
+fi
