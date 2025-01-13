@@ -21,7 +21,7 @@ trap ctrl_c INT
 
 # Global variables
 
-backup_path=""
+backup_path="ADD_YOUR_PATH_HERE"
 
 current_date_time=$(date +"%Y-%m-%d_%H:%M:%S")
 
