@@ -37,7 +37,7 @@ needs_all=false
 function check_too_many_options(){
 
         if [ $backup_mode -gt 1 ]; then
-                echo -e "\n${redcol}Too many options provided. Trying to perform different actions at once is not supported${endcol}"
+                echo -e "\n${redcol}Too many options provided. Trying to perform different actions at once is not supported.${endcol}"
                 exit 0
         fi
 }
@@ -88,13 +88,14 @@ function list_backup(){
         # Check whether a file was provided
         if [ "$target" ]; then
                 if [ -d "$backup_path/$target" ]; then 
+                        echo
                         ls -1 "$backup_path/$target" 
                 fi 
 
         else 
                 backup_dirs="$(ls -1 "$backup_path")"
+                echo
                 echo -e "$backup_dirs" | while read line; do
-
                 echo -e "$line \t\t $(ls -1 "$backup_path/$line" | wc -l) backups \t\t Last on "$(ls -1 "$backup_path/$line" | tail -n 1 | rev | cut -f 1-2 -d"_" | rev | sed 's/_/ at /')" "
 
                 done
@@ -116,15 +117,16 @@ function show_path(){
 function bring_backup(){
 
         if [ $last_only ]; then
-                echo 'you pressed b'
                 last_file="$(ls -1 "$backup_path/$target" | tail -n 1)"
                 cp -i "$backup_path/$target/$last_file" .
                 mv -i $last_file "$(echo "$last_file" | rev | cut -c 21- | rev)" 
+                echo -e "\nBrought last backup file (${greencol}$last_file${endcol}) to current directory."
         else
                 echo 'you pressed B'
                 folder="$(echo "$target" | rev | cut -c 21- | rev)"
                 cp -i "$backup_path/$folder/$target" .
                 mv -i "$target" "$folder" 
+                echo -e "\nBrought ${greencol}$last_file${endcol} to current directory."
         fi
 }
 
@@ -134,10 +136,12 @@ function copy_backup(){
                 echo 'you pressed c'
                 last_file="$(ls -1 "$backup_path/$target" | tail -n 1)"
                 cp -i "$backup_path/$target/$last_file" .
+                echo -e "\nCopied last backup file (${greencol}$last_file${endcol}) to current directory."
         else
                 echo 'you pressed C'
                 folder="$(echo "$target" | rev | cut -c 21- | rev)"
                 cp -i "$backup_path/$folder/$target" .
+                echo -e "\nCopied ${greencol}$last_file${endcol} to current directory."
         fi
 }
 
@@ -148,7 +152,7 @@ function purge_backup(){
                 echo -e "\nKeeping last file: ${greencol}$last_file${endcol}"
                 find "$backup_path/$target/" -type f ! -name "$last_file" -exec rm -f {} +
         else
-                echo -e "\n${redcol}No such folder mate!${endcol}"
+                echo -e "\n${redcol}Folder $target does not exist!${endcol}"
         fi
 }
 
@@ -170,7 +174,7 @@ function purge_all_backup(){
                                 find "$backup_path/$line/" -type f ! -name "$last_file" -exec rm -f {} +
 
                         else
-                                echo -e "\n${redcol}No such folder mate!${endcol}"
+                                echo -e "\n${redcol}Folder $target does not exist!${endcol}"
                         fi
                 done
         fi
@@ -194,8 +198,8 @@ function delete_all_backup(){
 function delete_backup(){
 
         if [ -d "$backup_path/$target/" ]; then
-                echo "You will delete all of $target! You have 6 seconds to stop the script...\n"
-                sleep 6
+                echo "You will delete all $target backups! You have 5 seconds to stop the script...\n"
+                sleep 5
                 rm -rf "$backup_path/$target" && echo "All backups for $target removed successfully"
         fi
 
@@ -222,7 +226,7 @@ Your current backup folder path is: ${greencol}$backup_path${endcol}
         -B) Copy a specific backup without the date and time extension (Requires file name as a parameter (with date time extension)).
         -c) Copy last backup to current folder with the date and time extension (Requires file name as a parameter (without date time extension)).
         -C) Copy a specific backup with the date and time extension (Requires file name as a parameter (with date time extension)).
-        -p) Purge all backup files of a certain folder except last file (Requires file name as a well as parameter -a (all)).
+        -p) Purge all backup files of a certain folder except last file (Requires file name).
         -P) Purge all backup files of all folders except last backup file of each folder (Requires parameter -a (all)).
         -d) Delete all backup files of a certain folder (Requires file name).
         -D) Delete all backup files of all folders (Requires parameter -a (all)).
@@ -231,8 +235,6 @@ Your current backup folder path is: ${greencol}$backup_path${endcol}
 "
 
 }
-
-
 
 function make_backup(){
 
@@ -288,7 +290,7 @@ shift $((OPTIND - 1))
 if [ "$#" -eq 1 ] && [ $backup_mode -eq 0 ]; then
 
         file_to_save="$1"
-        echo "file $file_to_save registered"
+        #echo "File $file_to_save registered"
 
 elif [ "$#" -gt 1 ] && [ $backup_mode -eq 0 ]; then
 
@@ -319,7 +321,7 @@ if [ $file_to_save ] && [ $backup_mode -eq 0 ]; then
 
 elif [ $file_to_save ] && [ $backup_mode -eq 1 ]; then
         echo -e "\n${redcol}Using other option, do not add a file outside parameter.${endocol}"
-        echo -e "\nIf you want to make a backup simply run: ./backup.sh [FILE] "
+        echo -e "\nIf you want to make a backup simply run: ./$0 [FILE] "
         exit 0
 
 elif [ $backup_mode -eq 0 ]; then
