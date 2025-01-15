@@ -73,7 +73,7 @@ Options -B and -C have the same funtcionality but a specific backup file instanc
 
 Backups can easily build up, either in the form of backups of files that are no longer needed or unnecessary older backups of files in use.
 
-To deal with this backup.sh can use options -p, -P, -d and -D.
+To deal with this, backup.sh provides options -p, -P, -d and -D.
 
 Options -p and -P (from 'purge') will eliminate all but the last backup, while options -d and -D will eliminate all backups.
 
