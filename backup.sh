@@ -195,7 +195,7 @@ function delete_all_backup(){
 function delete_backup(){
 
         if [ -d "$backup_path/$target/" ]; then
-                echo "You will delete all $target backups! You have 5 seconds to stop the script...\n"
+                echo -e "${yellowcol}You will delete all $target backups! You have 5 seconds to stop the script...${endcol}\n"
                 sleep 5
                 rm -rf "$backup_path/$target" && echo "All backups for $target removed successfully"
         fi
