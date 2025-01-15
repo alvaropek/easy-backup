@@ -71,7 +71,7 @@ Options -B and -C have the same funtcionality but a specific backup file instanc
 
 ### Cleaning and deleting backup folders
 
-Backups can easily build up, either in the form of backup of files that are no longer needed or unnecessary older backups of files in use.
+Backups can easily build up, either in the form of backups of files that are no longer needed or unnecessary older backups of files in use.
 
 To deal with this backup.sh can use options -p, -P, -d and -D.
 
