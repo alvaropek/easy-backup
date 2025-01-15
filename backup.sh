@@ -122,26 +122,23 @@ function bring_backup(){
                 mv -i $last_file "$(echo "$last_file" | rev | cut -c 21- | rev)" 
                 echo -e "\nBrought last backup file (${greencol}$last_file${endcol}) to current directory."
         else
-                echo 'you pressed B'
                 folder="$(echo "$target" | rev | cut -c 21- | rev)"
                 cp -i "$backup_path/$folder/$target" .
                 mv -i "$target" "$folder" 
-                echo -e "\nBrought ${greencol}$last_file${endcol} to current directory."
+                echo -e "\nBrought ${greencol}"$backup_path/$folder/$target"${endcol} to current directory."
         fi
 }
 
 function copy_backup(){
 
         if [ $last_only ]; then
-                echo 'you pressed c'
                 last_file="$(ls -1 "$backup_path/$target" | tail -n 1)"
                 cp -i "$backup_path/$target/$last_file" .
                 echo -e "\nCopied last backup file (${greencol}$last_file${endcol}) to current directory."
         else
-                echo 'you pressed C'
                 folder="$(echo "$target" | rev | cut -c 21- | rev)"
                 cp -i "$backup_path/$folder/$target" .
-                echo -e "\nCopied ${greencol}$last_file${endcol} to current directory."
+                echo -e "\nCopied ${greencol}"$backup_path/$folder/$target"${endcol} to current directory."
         fi
 }
 
